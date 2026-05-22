@@ -20,7 +20,7 @@ Créer un site vitrine multi-services avec une page de contact. Les messages env
 ```text
 Navigateur
    |
-   | http://localhost:3000
+   | http://localhost:3001
    v
 Nginx container
    |
