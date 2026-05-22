@@ -1,0 +1,71 @@
+services:
+  nginx:
+    build: ./nginx
+    container_name: webops-nginx
+    ports:
+      - "3001:80"
+    volumes:
+      - ./app/public:/var/www/html/public:ro
+    depends_on:
+      - php
+    networks:
+      - webops-network
+    restart: always
+
+  php:
+    build: ./php
+    container_name: webops-php
+    volumes:
+      - ./app:/var/www/html
+    environment:
+      DB_HOST: mysql
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - webops-network
+    restart: always
+
+  mysql:
+    image: mysql:8.0
+    container_name: webops-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - webops-network
+    restart: always
+
+  adminer:
+    image: adminer:latest
+    container_name: webops-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - webops-network
+    restart: always
+
+volumes:
+  db_data:
+
+networks:
+  webops-network:
+    driver: bridge

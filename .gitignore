@@ -1,0 +1,13 @@
+.env
+vendor/
+node_modules/
+
+mysql/data/
+
+*.log
+
+.DS_Store
+
+.vscode/
+
+.idea/
